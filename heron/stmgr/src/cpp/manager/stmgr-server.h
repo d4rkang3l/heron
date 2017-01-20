@@ -95,8 +95,8 @@ class StMgrServer : public Server {
                                       proto::stmgr::StartBackPressureMessage* _message);
   void HandleStopBackPressureMessage(Connection* _conn,
                                      proto::stmgr::StopBackPressureMessage* _message);
-  void SendStartBackPressureToOtherStMgrs();
-  void SendStopBackPressureToOtherStMgrs();
+  void SendStartBackPressureToUpstreamStMgrs();
+  void SendStopBackPressureToUpstreamStMgrs();
 
   // Back pressure related connection callbacks
   // Do back pressure
@@ -107,10 +107,10 @@ class StMgrServer : public Server {
   // Connection buffer size metric
   void ConnectionBufferChangeCb(Connection* _connection);
 
-  // Can we free the back pressure on the spouts?
-  void AttemptStopBackPressureFromSpouts();
-  // Start back pressure on the spouts
-  void StartBackPressureOnSpouts();
+  // Can we free the back pressure on the instances?
+  void AttemptStopBackPressureFromInstances();
+  // Start back pressure on the instances
+  void StartBackPressureOnInstances();
 
   // Compute the LocalSpouts from Physical Plan
   void ComputeLocalSpouts(const proto::system::PhysicalPlan& _pplan);
@@ -170,7 +170,7 @@ class StMgrServer : public Server {
   heron::common::TimeSpentMetric* back_pressure_metric_aggr_;
   heron::common::TimeSpentMetric* back_pressure_metric_initiated_;
 
-  bool spouts_under_back_pressure_;
+  bool instances_under_back_pressure_;
 };
 
 }  // namespace stmgr

@@ -24,6 +24,7 @@
 #include <vector>
 #include <chrono>
 #include <typeindex>
+#include <set>
 #include "proto/messages.h"
 #include "network/network.h"
 #include "basics/basics.h"
@@ -72,8 +73,8 @@ class StMgr {
   virtual void StopBackPressureOnServer(const sp_string& _other_stmgr_id);
   // Used by the server to tell the client to send the back pressure related
   // messages
-  void SendStartBackPressureToOtherStMgrs();
-  void SendStopBackPressureToOtherStMgrs();
+  void SendStartBackPressureToUpstreamStMgrs();
+  void SendStopBackPressureToUpstreamStMgrs();
   void StartTMasterClient();
   bool DidAnnounceBackPressure();
 
@@ -88,6 +89,7 @@ class StMgr {
   void PopulateStreamConsumers(
       proto::api::Topology* _topology,
       const std::map<sp_string, std::vector<sp_int32> >& _component_to_task_ids);
+  void PopulateUpstreamStmgrs(proto::system::PhysicalPlan* _pplan, std::set<sp_string>& _upstreams);
   void PopulateXorManagers(
       const proto::api::Topology& _topology, sp_int32 _message_timeout,
       const std::map<sp_string, std::vector<sp_int32> >& _component_to_task_ids);
@@ -131,6 +133,8 @@ class StMgr {
   std::unordered_map<sp_int32, sp_string> task_id_to_stmgr_;
   // map of <component, streamid> to its consumers
   std::unordered_map<std::pair<sp_string, sp_string>, StreamConsumers*> stream_consumers_;
+  // upstream stmgrs of this stmgr
+  std::set<sp_string> upstream_stmgrs_;
   // xor managers
   XorManager* xor_mgrs_;
   // Tuple Cache to optimize message building
