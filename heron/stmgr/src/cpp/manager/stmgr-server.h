@@ -110,7 +110,7 @@ class StMgrServer : public Server {
   // Can we free the back pressure on the spouts?
   void AttemptStopBackPressureFromSpouts();
   // Start back pressure on the spouts
-  void StartBackPressureOnSpouts();
+  void StartBackPressureOnSpouts(bool only_spouts);
 
   // Compute the LocalSpouts from Physical Plan
   void ComputeLocalSpouts(const proto::system::PhysicalPlan& _pplan);

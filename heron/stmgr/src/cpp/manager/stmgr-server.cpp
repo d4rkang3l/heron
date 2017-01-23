@@ -456,7 +456,7 @@ void StMgrServer::StartBackPressureConnectionCb(Connection* _connection) {
 
   remote_ends_who_caused_back_pressure_.insert(instance_name);
   LOG(INFO) << "We observe back pressure on sending data to instance " << instance_name;
-  StartBackPressureOnSpouts();
+  StartBackPressureOnSpouts(false);
 }
 
 void StMgrServer::StopBackPressureConnectionCb(Connection* _connection) {
@@ -499,7 +499,7 @@ void StMgrServer::StartBackPressureClientCb(const sp_string& _other_stmgr_id) {
   remote_ends_who_caused_back_pressure_.insert(_other_stmgr_id);
   LOG(INFO) << "We observe back pressure on sending data to remote stream manager "
             << _other_stmgr_id;
-  StartBackPressureOnSpouts();
+  StartBackPressureOnSpouts(false);
 }
 
 void StMgrServer::StopBackPressureClientCb(const sp_string& _other_stmgr_id) {
@@ -534,7 +534,7 @@ void StMgrServer::HandleStartBackPressureMessage(Connection* _conn,
   sp_string stmgr_id = iter->second;
   stmgrs_who_announced_back_pressure_.insert(stmgr_id);
 
-  StartBackPressureOnSpouts();
+  StartBackPressureOnSpouts(true);
 
   release(_message);
 }
@@ -576,14 +576,14 @@ void StMgrServer::SendStopBackPressureToOtherStMgrs() {
   stmgr_->SendStopBackPressureToOtherStMgrs();
 }
 
-void StMgrServer::StartBackPressureOnSpouts() {
+void StMgrServer::StartBackPressureOnSpouts(bool only_spouts) {
   if (!spouts_under_back_pressure_) {
     LOG(WARNING) << "Stopping reading from spouts to do back pressure";
 
     spouts_under_back_pressure_ = true;
     // Put back pressure on all spouts
     for (auto iiter = instance_info_.begin(); iiter != instance_info_.end(); ++iiter) {
-      if (!iiter->second->local_spout_) continue;
+      if (only_spouts && !iiter->second->local_spout_) continue;
       if (!iiter->second->conn_) continue;
       if (!iiter->second->conn_->isUnderBackPressure()) iiter->second->conn_->putBackPressure();
     }
