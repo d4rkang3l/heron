@@ -108,7 +108,7 @@ class StMgrServer : public Server {
   void ConnectionBufferChangeCb(Connection* _connection);
 
   // Can we free the back pressure on the spouts?
-  void AttemptStopBackPressureFromSpouts();
+  void AttemptStopBackPressureFromSpouts(bool only_spouts);
   // Start back pressure on the spouts
   void StartBackPressureOnSpouts(bool only_spouts);
 

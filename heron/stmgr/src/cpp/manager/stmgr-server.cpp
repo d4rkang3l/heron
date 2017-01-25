@@ -199,7 +199,7 @@ void StMgrServer::HandleConnectionClose(Connection* _conn, NetworkErrorCode) {
   }
   // Note: Connections to other stream managers get handled in StmgrClient
   // Now attempt to stop the back pressure
-  AttemptStopBackPressureFromSpouts();
+  AttemptStopBackPressureFromSpouts(true);
 
   // Now cleanup the data structures
   auto siter = rstmgrs_.find(_conn);
@@ -479,7 +479,7 @@ void StMgrServer::StopBackPressureConnectionCb(Connection* _connection) {
     back_pressure_metric_initiated_->Stop();
   }
   LOG(INFO) << "We don't observe back pressure now on sending data to instance " << instance_name;
-  AttemptStopBackPressureFromSpouts();
+  AttemptStopBackPressureFromSpouts(false);
 }
 
 void StMgrServer::ConnectionBufferChangeCb(Connection* _connection) {
@@ -514,7 +514,7 @@ void StMgrServer::StopBackPressureClientCb(const sp_string& _other_stmgr_id) {
   LOG(INFO) << "We don't observe back pressure now on sending data to remote "
                "stream manager "
             << _other_stmgr_id;
-  AttemptStopBackPressureFromSpouts();
+  AttemptStopBackPressureFromSpouts(false);
 }
 
 void StMgrServer::HandleStartBackPressureMessage(Connection* _conn,
@@ -558,7 +558,7 @@ void StMgrServer::HandleStopBackPressureMessage(Connection* _conn,
   if (stmgrs_who_announced_back_pressure_.find(stmgr_id) !=
       stmgrs_who_announced_back_pressure_.end()) {
     stmgrs_who_announced_back_pressure_.erase(stmgr_id);
-    AttemptStopBackPressureFromSpouts();
+    AttemptStopBackPressureFromSpouts(true);
   }
 
   release(_message);
@@ -591,7 +591,7 @@ void StMgrServer::StartBackPressureOnSpouts(bool only_spouts) {
   }
 }
 
-void StMgrServer::AttemptStopBackPressureFromSpouts() {
+void StMgrServer::AttemptStopBackPressureFromSpouts(bool only_spouts) {
   if (spouts_under_back_pressure_ && remote_ends_who_caused_back_pressure_.empty() &&
       stmgrs_who_announced_back_pressure_.empty()) {
     LOG(INFO) << "Starting reading from spouts to relieve back pressure";
@@ -599,7 +599,7 @@ void StMgrServer::AttemptStopBackPressureFromSpouts() {
 
     // Remove backpressure from all pipes
     for (auto iiter = instance_info_.begin(); iiter != instance_info_.end(); ++iiter) {
-      if (!iiter->second->local_spout_) continue;
+      if (only_spouts && !iiter->second->local_spout_) continue;
       if (!iiter->second->conn_) continue;
       if (iiter->second->conn_->isUnderBackPressure()) iiter->second->conn_->removeBackPressure();
     }
